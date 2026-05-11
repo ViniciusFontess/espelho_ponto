@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from src.pipeline import run
 
 app = FastAPI(title="Espelho Ponto — SEBRAE")
-app.mount("/static", StaticFiles(directory="web/static"), name="static")
+app.mount("/assets", StaticFiles(directory="web/static/assets"), name="assets")
 
 _jobs: dict[str, dict] = {}
 

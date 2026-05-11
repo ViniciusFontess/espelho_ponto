@@ -1,1 +1,237 @@
-<!DOCTYPE html><html><body><h1>Espelho Ponto</h1><p>Em construção...</p></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Espelho Ponto — SEBRAE</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f4f6f8; color: #1a1a1a; }
+
+    header {
+      background: #003c82;
+      color: white;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .upload-area {
+      border: 2px dashed #003c82;
+      border-radius: 8px;
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .upload-area:hover, .upload-area.drag-over { background: #eef3ff; }
+    .upload-area input { display: none; }
+    .upload-area p { color: #555; margin-top: .5rem; font-size: .9rem; }
+
+    button#btn-processar {
+      margin-top: 1rem;
+      background: #003c82;
+      color: white;
+      border: none;
+      padding: .75rem 2rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: none;
+    }
+    button#btn-processar:disabled { background: #888; cursor: not-allowed; }
+
+    #status { margin-top: 1rem; font-size: .9rem; color: #555; min-height: 1.2rem; }
+
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    th { background: #003c82; color: white; padding: .6rem 1rem; text-align: left; }
+    td { padding: .6rem 1rem; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+    tr:hover td { background: #f0f4ff; }
+
+    .badge {
+      display: inline-block;
+      padding: .2rem .6rem;
+      border-radius: 12px;
+      font-size: .8rem;
+      font-weight: 600;
+    }
+    .badge-ok { background: #d1fae5; color: #065f46; }
+    .badge-fail { background: #fee2e2; color: #991b1b; }
+
+    #resultado-section { display: none; }
+
+    .resumo-bar {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      font-size: .9rem;
+    }
+    .resumo-item { color: #555; }
+    .resumo-item strong { color: #1a1a1a; }
+  </style>
+</head>
+<body>
+
+<header>Espelho Ponto — SEBRAE</header>
+
+<main>
+  <div class="card">
+    <h2 style="margin-bottom:1rem;">Upload do PDF Mensal</h2>
+    <div class="upload-area" id="drop-zone">
+      <svg width="40" height="40" fill="#003c82" viewBox="0 0 24 24">
+        <path d="M12 2a1 1 0 0 1 .707.293l4 4a1 1 0 0 1-1.414 1.414L13 5.414V15a1 1 0 0 1-2 0V5.414L8.707 7.707A1 1 0 0 1 7.293 6.293l4-4A1 1 0 0 1 12 2zM4 17a1 1 0 0 1 1 1v1h14v-1a1 1 0 0 1 2 0v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1a1 1 0 0 1 1-1z"/>
+      </svg>
+      <p id="drop-label">Arraste o PDF aqui ou <strong>clique para selecionar</strong></p>
+      <input type="file" id="file-input" accept=".pdf" />
+    </div>
+    <button id="btn-processar">Processar PDF</button>
+    <div id="status"></div>
+  </div>
+
+  <div class="card" id="resultado-section">
+    <h2 style="margin-bottom:1rem;">Resultados</h2>
+    <div class="resumo-bar" id="resumo-bar"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Matrícula</th>
+          <th>Cargo</th>
+          <th>Equipe</th>
+          <th>Período</th>
+          <th>Dias</th>
+          <th>Assinatura</th>
+        </tr>
+      </thead>
+      <tbody id="tabela-body"></tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+  const dropZone = document.getElementById('drop-zone');
+  const fileInput = document.getElementById('file-input');
+  const btnProcessar = document.getElementById('btn-processar');
+  const statusEl = document.getElementById('status');
+  const resultadoSection = document.getElementById('resultado-section');
+  const tabelaBody = document.getElementById('tabela-body');
+  const resumoBar = document.getElementById('resumo-bar');
+  const dropLabel = document.getElementById('drop-label');
+
+  let arquivoSelecionado = null;
+
+  dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.pdf')) selecionarArquivo(file);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) selecionarArquivo(fileInput.files[0]);
+  });
+
+  function selecionarArquivo(file) {
+    arquivoSelecionado = file;
+    dropLabel.innerHTML = `<strong>${file.name}</strong> (${(file.size / 1024).toFixed(0)} KB)`;
+    btnProcessar.style.display = 'block';
+    statusEl.textContent = '';
+  }
+
+  btnProcessar.addEventListener('click', async () => {
+    if (!arquivoSelecionado) return;
+    btnProcessar.disabled = true;
+    statusEl.textContent = 'Enviando PDF...';
+    resultadoSection.style.display = 'none';
+
+    const form = new FormData();
+    form.append('file', arquivoSelecionado);
+
+    const resp = await fetch('/upload', { method: 'POST', body: form });
+    if (!resp.ok) {
+      const err = await resp.json();
+      statusEl.textContent = `Erro: ${err.error}`;
+      btnProcessar.disabled = false;
+      return;
+    }
+
+    const { job_id } = await resp.json();
+    statusEl.textContent = 'Processando...';
+    aguardarResultado(job_id);
+  });
+
+  async function aguardarResultado(job_id) {
+    const resp = await fetch(`/results/${job_id}`);
+    const data = await resp.json();
+
+    if (data.status === 'processing') {
+      setTimeout(() => aguardarResultado(job_id), 2000);
+      return;
+    }
+
+    btnProcessar.disabled = false;
+
+    if (data.status === 'error') {
+      statusEl.textContent = `Erro ao processar: ${data.error}`;
+      return;
+    }
+
+    statusEl.textContent = '';
+    renderizarTabela(data.results);
+  }
+
+  function renderizarTabela(results) {
+    tabelaBody.innerHTML = '';
+    const validos = results.filter(r => r.hash_valido).length;
+    const semHash = results.filter(r => !r.hash_presente).length;
+
+    resumoBar.innerHTML = `
+      <span class="resumo-item"><strong>${results.length}</strong> funcionários</span>
+      <span class="resumo-item"><strong style="color:#065f46">${validos}</strong> assinados</span>
+      <span class="resumo-item"><strong style="color:#991b1b">${semHash}</strong> sem assinatura</span>
+    `;
+
+    results.forEach(r => {
+      const tr = document.createElement('tr');
+      let badge;
+      if (r.hash_valido) {
+        badge = `<span class="badge badge-ok">✓ Assinado</span>`;
+        if (r.assinatura && r.assinatura.data_hora) {
+          badge += `<br><small style="color:#555">${r.assinatura.data_hora}</small>`;
+        }
+      } else if (r.hash_presente) {
+        badge = `<span class="badge badge-fail">✗ Inválido</span>`;
+      } else {
+        badge = `<span class="badge badge-fail">✗ Não assinou</span>`;
+      }
+
+      tr.innerHTML = `
+        <td>${r.nome || '—'}</td>
+        <td>${r.matricula || '—'}</td>
+        <td>${r.cargo || '—'}</td>
+        <td style="max-width:200px;word-break:break-word">${r.equipe || '—'}</td>
+        <td>${r.periodo || '—'}</td>
+        <td>${r.dias.length}</td>
+        <td>${badge}</td>
+      `;
+      tabelaBody.appendChild(tr);
+    });
+
+    resultadoSection.style.display = 'block';
+    resultadoSection.scrollIntoView({ behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

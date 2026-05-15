@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 const POLL_INTERVAL = 2000
 
-// ─── StatusBadge ─────────────────────────────────────────────────────────────
+// ─── StatusBadge (Type A) ────────────────────────────────────────────────────
 function StatusBadge({ presente, valido, dataHora }) {
   if (valido) {
     return (
@@ -45,14 +45,14 @@ function StatusBadge({ presente, valido, dataHora }) {
   )
 }
 
-// ─── SummaryBar ───────────────────────────────────────────────────────────────
+// ─── SummaryBar (Type A — Espelho assinado) ───────────────────────────────────
 function SummaryBar({ results }) {
-  const total    = results.length
+  const total     = results.length
   const assinados = results.filter(r => r.hash_valido).length
-  const nao      = results.filter(r => !r.hash_presente).length
+  const nao       = results.filter(r => !r.hash_presente).length
 
   const cards = [
-    { label: 'Total',      value: total,    bg: 'var(--navy)',    fg: '#fff' },
+    { label: 'Total',      value: total,     bg: 'var(--navy)',    fg: '#fff' },
     { label: 'Assinados',  value: assinados, bg: 'var(--emerald)', fg: '#fff' },
     { label: 'Sem assin.', value: nao,       bg: 'var(--red)',     fg: '#fff' },
   ]
@@ -86,7 +86,7 @@ function SummaryBar({ results }) {
   )
 }
 
-// ─── ResultsTable ─────────────────────────────────────────────────────────────
+// ─── ResultsTable (Type A) ────────────────────────────────────────────────────
 function ResultsTable({ results }) {
   return (
     <div style={{ overflowX: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 1px 3px rgba(0,0,0,.08)' }}>
@@ -111,7 +111,7 @@ function ResultsTable({ results }) {
               const accentColor = r.hash_valido ? 'var(--emerald)' : r.hash_presente ? 'var(--amber)' : 'var(--red)'
               return (
                 <motion.tr
-                  key={r.matricula + i}
+                  key={(r.matricula || '') + i}
                   initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
@@ -157,6 +157,140 @@ function ResultsTable({ results }) {
         </tbody>
       </table>
     </div>
+  )
+}
+
+// ─── MONTH NAME HELPER ────────────────────────────────────────────────────────
+const MESES = [
+  '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+]
+
+// ─── JornadaFolderView (Type B) ───────────────────────────────────────────────
+function JornadaFolderView({ results }) {
+  // Group by period
+  const grouped = {}
+  results.forEach(r => {
+    const key = r.periodo || '?'
+    if (!grouped[key]) grouped[key] = []
+    grouped[key].push(r)
+  })
+
+  const period = Object.keys(grouped)[0] || ''
+  const [mm, yyyy] = period.split('/')
+  const mesNome = MESES[parseInt(mm, 10)] || period
+
+  return (
+    <div>
+      {/* Period banner */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          background: 'linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%)',
+          color: '#fff',
+          borderRadius: 'var(--radius)',
+          padding: '20px 28px',
+          marginBottom: 24,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 20,
+          boxShadow: '0 4px 20px rgba(30,58,95,.25)',
+        }}
+      >
+        <div style={{ fontSize: 40 }}>📁</div>
+        <div>
+          <p style={{ fontSize: 12, fontWeight: 600, opacity: 0.7, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+            Jornada — Relatório sem assinatura
+          </p>
+          <h3 style={{ fontFamily: 'Syne', fontWeight: 800, fontSize: 22, marginTop: 2 }}>
+            {mesNome} {yyyy}
+          </h3>
+          <p style={{ fontSize: 13, opacity: 0.8, marginTop: 4 }}>
+            {results.length} {results.length === 1 ? 'funcionário' : 'funcionários'} • separados em pastas individuais
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Folder grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+        gap: 14,
+      }}>
+        {results.map((r, i) => (
+          <FolderCard key={i} employee={r} index={i} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FolderCard({ employee, index }) {
+  const { nome, periodo, pagina } = employee
+  const initials = nome
+    ? nome.split(' ').slice(0, 2).map(w => w[0]).join('')
+    : '?'
+  const hue = (index * 47 + 200) % 360
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: index * 0.04 }}
+      style={{
+        background: '#fff',
+        borderRadius: 'var(--radius-sm)',
+        padding: 18,
+        boxShadow: '0 1px 4px rgba(0,0,0,.08)',
+        border: '1px solid var(--border)',
+        display: 'flex',
+        gap: 14,
+        alignItems: 'center',
+      }}
+    >
+      {/* Avatar */}
+      <div style={{
+        width: 46, height: 46, borderRadius: 12, flexShrink: 0,
+        background: `hsl(${hue}, 55%, 92%)`,
+        color: `hsl(${hue}, 55%, 38%)`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'Syne', fontWeight: 800, fontSize: 16,
+      }}>
+        {initials}
+      </div>
+
+      {/* Info */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{
+          fontWeight: 700, fontSize: 13, color: 'var(--navy)',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
+          {nome || '—'}
+        </p>
+        <div style={{ display: 'flex', gap: 6, marginTop: 5, flexWrap: 'wrap' }}>
+          <span style={{
+            fontSize: 11, fontWeight: 600, padding: '2px 8px',
+            borderRadius: 20, background: 'var(--coral-light)', color: 'var(--coral)',
+          }}>
+            📅 {periodo}
+          </span>
+          <span style={{
+            fontSize: 11, fontWeight: 600, padding: '2px 8px',
+            borderRadius: 20, background: 'var(--bg)', color: 'var(--muted)',
+          }}>
+            pág. {pagina}
+          </span>
+        </div>
+        {/* Folder path hint */}
+        <p style={{
+          fontSize: 10, color: 'var(--muted)', marginTop: 5,
+          fontFamily: 'monospace', opacity: 0.7,
+        }}>
+          📂 {(nome || 'DESCONHECIDO').replace(/\s+/g, '_').replace(/[^A-Za-z0-9_]/g, '_')}/{(periodo || '').replace('/', '_')}/
+        </p>
+      </div>
+    </motion.div>
   )
 }
 
@@ -216,11 +350,38 @@ function UploadZone({ onFile, file }) {
             Arraste o PDF aqui
           </p>
           <p style={{ fontSize: 13, color: 'var(--muted)', marginTop: 6 }}>
-            ou <strong style={{ color: 'var(--coral)' }}>clique para selecionar</strong>
+            Aceita Espelho de Ponto Eletrônico ou Jornada
+          </p>
+          <p style={{ fontSize: 12, color: 'var(--coral)', marginTop: 4, fontWeight: 600 }}>
+            ou clique para selecionar
           </p>
         </div>
       )}
     </motion.div>
+  )
+}
+
+// ─── TypeBadge (tipo do PDF detectado) ───────────────────────────────────────
+function TypeBadge({ tipo }) {
+  if (tipo === 'espelho') {
+    return (
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        background: 'var(--emerald-light)', color: 'var(--emerald)',
+        padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+      }}>
+        🔏 Espelho de Ponto (assinado)
+      </span>
+    )
+  }
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6,
+      background: 'var(--coral-light)', color: 'var(--coral)',
+      padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+    }}>
+      📋 Jornada (sem assinatura)
+    </span>
   )
 }
 
@@ -230,6 +391,8 @@ export default function App() {
   const [status, setStatus]   = useState('idle')   // idle | uploading | processing | done | error
   const [results, setResults] = useState([])
   const [errorMsg, setErrorMsg] = useState('')
+
+  const pdfTipo = results.length > 0 ? results[0].tipo : null  // 'espelho' | 'jornada'
 
   const processar = async () => {
     if (!file) return
@@ -336,9 +499,12 @@ export default function App() {
                 marginBottom: '1.5rem',
               }}
             >
-              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 20, color: 'var(--navy)' }}>
+              <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 6, color: 'var(--navy)' }}>
                 Upload do PDF Mensal
               </h2>
+              <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>
+                Suporta <strong>Espelho de Ponto Eletrônico</strong> (assinado) e <strong>Jornada</strong> (sem assinatura)
+              </p>
 
               <UploadZone file={file} onFile={setFile} />
 
@@ -408,24 +574,38 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy)' }}>
-                  Resultados
-                </h2>
-                <span style={{ fontSize: 13, color: 'var(--muted)' }}>
-                  {results.length} {results.length === 1 ? 'funcionário' : 'funcionários'} processados
-                </span>
+                <div>
+                  <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy)' }}>
+                    Resultados
+                  </h2>
+                  <div style={{ display: 'flex', gap: 10, marginTop: 6, alignItems: 'center' }}>
+                    <TypeBadge tipo={pdfTipo} />
+                    <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+                      {results.length} {results.length === 1 ? 'funcionário' : 'funcionários'}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <SummaryBar results={results} />
+              {/* Type A: Espelho assinado */}
+              {pdfTipo === 'espelho' && (
+                <>
+                  <SummaryBar results={results} />
+                  <div style={{
+                    background: 'var(--surface)',
+                    borderRadius: 'var(--radius)',
+                    boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
+                    overflow: 'hidden',
+                  }}>
+                    <ResultsTable results={results} />
+                  </div>
+                </>
+              )}
 
-              <div style={{
-                background: 'var(--surface)',
-                borderRadius: 'var(--radius)',
-                boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
-                overflow: 'hidden',
-              }}>
-                <ResultsTable results={results} />
-              </div>
+              {/* Type B: Jornada por pastas */}
+              {pdfTipo === 'jornada' && (
+                <JornadaFolderView results={results} />
+              )}
             </motion.div>
           )}
         </AnimatePresence>

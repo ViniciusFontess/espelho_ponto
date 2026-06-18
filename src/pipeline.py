@@ -11,33 +11,18 @@ from __future__ import annotations
 
 import sys
 
-from src.data_parser import parse_employee
 from src.folder_writer import write_employee_folder
-from src.hash_extractor import extract_hash
 from src.jornada_parser import parse_jornada_pdf
 from src.output_writer import write_employee_json
-from src.pdf_loader import load_pages
+from src.parsers_espelho import parse_espelho_eletronico
 from src.pdf_type_detector import detect_pdf_type
-from src.validator import validate_hash
 
 
 def _run_type_a(pdf_path: str, output_dir: str) -> list[dict]:
     """Process a Type A signed Espelho de Ponto PDF."""
-    pages = load_pages(pdf_path)
-    results = []
-    for page in pages:
-        text = page["text"]
-        hash_str = extract_hash(text)
-        validation = validate_hash(hash_str)
-        employee = parse_employee(text)
-        record = {
-            "tipo": "espelho",
-            "hash": hash_str,
-            **validation,
-            **employee,
-        }
+    results = parse_espelho_eletronico(pdf_path)
+    for record in results:
         write_employee_json(record, output_dir)
-        results.append(record)
     return results
 
 

@@ -237,6 +237,7 @@ def parse_jornada_page(doc: fitz.Document, page_num: int) -> dict:
     return {
         "nome": nome,
         "periodo": periodo,
+        "competencia": periodo,
         "mes": mes,
         "ano": ano,
         "tipo": "jornada",

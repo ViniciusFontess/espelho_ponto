@@ -8,7 +8,7 @@ Adicionar um molde novo = adicionar uma entrada aqui + seu parser.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, Optional
 
 from src.parsers_espelho import parse_espelho_eletronico

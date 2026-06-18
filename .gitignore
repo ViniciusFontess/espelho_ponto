@@ -1,1 +1,8 @@
 .superpowers/
+_tmp_jobs/
+output/
+tmp_*.pdf
+__pycache__/
+*.pyc
+temp_*.png
+nimbus_regular.ttf

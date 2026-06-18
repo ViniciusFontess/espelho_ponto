@@ -6,6 +6,7 @@ export const COLORS = {
   ink: '#0f1020',
   muted: '#6b6786',
   border: '#e5e1f0',
+  amber: '#d97706',
 }
 export const GRAD = {
   header: `linear-gradient(120deg, ${COLORS.purpleDark} 0%, #3b1d8f 55%, ${COLORS.blue} 130%)`,

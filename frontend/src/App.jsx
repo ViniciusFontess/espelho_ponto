@@ -11,6 +11,7 @@ export default function App() {
     return <UploadMolde onBack={() => setTela('landing')}
              onDone={(id) => { setJobId(id); setTela('results') }} />
   if (tela === 'results')
-    return <Results jobId={jobId} onReset={() => { setJobId(null); setTela('landing') }} />
+    return <Results jobId={jobId} onBack={() => setTela('upload')}
+             onReset={() => { setJobId(null); setTela('landing') }} />
   return <Landing onSelectMolde={() => setTela('upload')} />
 }

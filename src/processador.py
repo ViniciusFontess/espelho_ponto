@@ -14,7 +14,7 @@ from typing import Optional
 from src.molde_registry import get_molde
 from src.pdf_type_detector import detect_pdf_type
 from src.extracao import filtrar_variaveis
-from src.folder_writer import write_employee_folder
+from src.folder_writer import write_employee_folder, _safe_name
 from src.destino import DestinoZip
 
 # Mapa: tipo detectado pelo detector → molde correspondente
@@ -61,9 +61,16 @@ def processar(
     registros = molde.parser(pdf_path)
     registros = [filtrar_variaveis(r, variaveis) for r in registros]
 
-    # Organiza em árvore de pastas (reaproveita folder_writer)
+    # Organiza em árvore de pastas (reaproveita folder_writer) e anexa, em cada
+    # registro, o caminho relativo da pasta funcional gerada (ex.: "ANA_SILVA/01_2026").
     for reg in registros:
+        nome = reg.get("nome", "DESCONHECIDO")
+        periodo_safe = str(reg.get("periodo", "00_0000")).replace("/", "_")
+        reg["pasta"] = f"{_safe_name(nome)}/{periodo_safe}"
         write_employee_folder(reg, output_dir=str(saida_dir), pdf_path=pdf_path)
+
+    # Estatísticas de gravação das pastas funcionais (controle operacional)
+    estatisticas = _coletar_estatisticas(saida_dir, registros)
 
     # Entrega via destino ZIP
     zip_path = job_dir / "resultado.zip"
@@ -73,5 +80,25 @@ def processar(
         "molde_id": molde_id,
         "tipo": registros[0].get("tipo") if registros else None,
         "funcionarios": registros,
+        "estatisticas": estatisticas,
         "zip_path": str(zip_path),
+    }
+
+
+def _coletar_estatisticas(saida_dir: Path, registros: list) -> dict:
+    """Conta pastas funcionais, subpastas por competência e arquivos gravados."""
+    pastas_pessoa = [p for p in saida_dir.iterdir() if p.is_dir()]
+    subpastas = [d for p in pastas_pessoa for d in p.iterdir() if d.is_dir()]
+    arquivos = [f for f in saida_dir.rglob("*") if f.is_file()]
+    json_gravados = sum(1 for f in arquivos if f.name == "dados.json")
+    pdf_gravados = sum(1 for f in arquivos if f.suffix.lower() == ".pdf")
+    competencias = {r.get("periodo") for r in registros if r.get("periodo")}
+    return {
+        "pessoas": len(registros),
+        "pastas_funcionais": len(pastas_pessoa),
+        "subpastas_competencia": len(subpastas),
+        "arquivos_gravados": len(arquivos),
+        "json_gravados": json_gravados,
+        "pdf_gravados": pdf_gravados,
+        "competencias": len(competencias),
     }

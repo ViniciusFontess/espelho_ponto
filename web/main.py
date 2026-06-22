@@ -13,6 +13,8 @@ from src.processador import processar, MoldeEmDesenvolvimentoError
 
 app = FastAPI(title="Plataforma de Separação de Documentos — SEBRAE")
 app.mount("/assets", StaticFiles(directory="web/static/assets"), name="assets")
+# Imagens-exemplo dos moldes (1ª página real de cada PDF-modelo).
+app.mount("/exemplos", StaticFiles(directory="web/exemplos"), name="exemplos")
 
 _jobs: dict[str, dict] = {}
 
@@ -79,6 +81,7 @@ async def _process(job_id, pdf_path, molde_id, variaveis):
             "molde_id": res["molde_id"],
             "tipo": res["tipo"],
             "results": res["funcionarios"],
+            "estatisticas": res.get("estatisticas"),
             "zip_path": res["zip_path"],
         }
     except MoldeEmDesenvolvimentoError as exc:

@@ -30,7 +30,7 @@ class Molde:
 _REGISTRY: dict[str, Molde] = {
     "espelho_eletronico": Molde(
         id="espelho_eletronico",
-        nome="Espelho de Ponto — Eletrônico (assinado)",
+        nome="Espelho de Ponto — Eletrônico",
         status="ativo",
         variaveis=["nome", "matricula", "cpf", "pis", "cargo",
                    "equipe", "periodo", "dias", "assinatura"],

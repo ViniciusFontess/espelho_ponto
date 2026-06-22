@@ -1,21 +1,15 @@
 :root {
-  --bg: #f7f6fb;
+  --bg: #f4f6fc;
   --surface: #ffffff;
-  --blue: #1d65c4;
-  --purple-dark: #2e1065;
-  --purple: #5b21b6;
-  --purple-light: #ede9fe;
-  --ink: #0f1020;
-  --muted: #6b6786;
-  --border: #e5e1f0;
-  --emerald: #059669;
-  --emerald-light: #d1fae5;
-  --red: #dc2626;
-  --red-light: #fee2e2;
-  --amber: #d97706;
-  --amber-light: #fef3c7;
-  --radius: 16px;
-  --radius-sm: 10px;
+  --blue: #3b5bfe;
+  --blue-dark: #2540e6;
+  --blue-soft: #eaeefe;
+  --ink: #0f1222;
+  --muted: #6b7280;
+  --line: #e3e6ef;
+  --emerald: #0a8f5b;
+  --amber: #b8740a;
+  --red: #d23541;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,9 +20,24 @@ body {
   color: var(--ink);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, h4 { font-family: 'Roboto', system-ui, sans-serif; font-weight: 900; }
+h1, h2, h3, h4 { font-family: 'Roboto', system-ui, sans-serif; font-weight: 900; letter-spacing: -.01em; }
+
+/* malha de blueprint sutil para fundos "técnicos" */
+.grid-bg {
+  background-color: #fff;
+  background-image:
+    linear-gradient(rgba(59,91,254,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,91,254,.045) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+/* foco acessível e visível (teclado) */
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible {
+  outline: 2px solid var(--blue); outline-offset: 2px;
+}
 
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pulse-border { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

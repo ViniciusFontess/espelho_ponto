@@ -50,6 +50,7 @@ def write_employee_folder(
     data: dict,
     output_dir: str = "output",
     pdf_path: Optional[str] = None,
+    src_doc=None,
 ) -> Path:
     """
     Write an employee record (and optionally their PDF page) to:
@@ -78,17 +79,19 @@ def write_employee_folder(
         json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
     )
 
-    # Optionally extract and save the PDF page
-    if pdf_path:
+    # Optionally extract and save the PDF page. src_doc evita reabrir o PDF a
+    # cada pessoa (O(N²) em volume grande) — abra uma vez e reaproveite.
+    if pdf_path or src_doc is not None:
         try:
-            doc = fitz.open(pdf_path)
+            doc = src_doc if src_doc is not None else fitz.open(pdf_path)
             if 0 <= page_num < len(doc):
                 single = fitz.open()  # new empty PDF
                 single.insert_pdf(doc, from_page=page_num, to_page=page_num)
                 pdf_out = employee_dir / f"pagina_{page_num + 1}.pdf"
                 single.save(str(pdf_out))
                 single.close()
-            doc.close()
+            if src_doc is None:
+                doc.close()
         except Exception:
             pass  # PDF extraction is best-effort
 

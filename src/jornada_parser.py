@@ -173,6 +173,21 @@ def _parse_date(date_str: str) -> tuple[int, int]:
     return 0, 0
 
 
+def _parse_plain(text: str, page_num: int):
+    """Nome/competência via texto direto; None se vier embaralhado (usa CID então)."""
+    m = re.search(r"Colaborador:\s*(.+)", text)
+    if not m:
+        return None
+    nome = m.group(1).strip()
+    if not nome or any(ord(c) < 32 for c in nome):  # control chars = embaralhado
+        return None
+    d = re.search(r"De\s+(\d{2})/(\d{2})/(\d{4})", text)
+    mes, ano = (int(d.group(2)), int(d.group(3))) if d else (0, 0)
+    periodo = f"{mes:02d}/{ano}" if mes else ""
+    return {"nome": nome, "periodo": periodo, "competencia": periodo,
+            "mes": mes, "ano": ano, "tipo": "jornada", "pagina": page_num + 1}
+
+
 def parse_jornada_page(doc: fitz.Document, page_num: int) -> dict:
     """
     Extract employee info from a single page of a Type B (Jornada) PDF.
@@ -187,6 +202,11 @@ def parse_jornada_page(doc: fitz.Document, page_num: int) -> dict:
           "pagina": int,
         }
     """
+    # Caminho rápido: exports cujo texto sai limpo no get_text() (não embaralhado).
+    plain = _parse_plain(doc[page_num].get_text(), page_num)
+    if plain:
+        return plain
+
     blocks = _get_page_blocks(doc, page_num)
 
     nome = ""
@@ -252,7 +272,8 @@ def parse_jornada_pdf(pdf_path: str) -> list[dict]:
     for i in range(len(doc)):
         try:
             record = parse_jornada_page(doc, i)
-            results.append(record)
+            if record.get("nome"):  # pula páginas sem colaborador (rodapé/resumo)
+                results.append(record)
         except Exception as exc:
             results.append(
                 {

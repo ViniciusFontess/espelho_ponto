@@ -32,7 +32,7 @@ export function Topbar({ onBack }) {
           <SebraeLogo height={26} fill={COLORS.blue} />
           <div style={{ width: 1, height: 26, background: COLORS.line }} />
           <div style={{ lineHeight: 1.1 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, color: COLORS.ink }}>Separador de Documentos</div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: COLORS.ink }}>Plataforma Inteligente de Documentos</div>
             <div style={{ ...monoLabel, fontSize: 9.5, color: COLORS.muted, letterSpacing: '.1em' }}>UGP · PROCESSAMENTO DOCUMENTAL</div>
           </div>
         </div>

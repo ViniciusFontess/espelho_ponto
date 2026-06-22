@@ -11,6 +11,8 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
+import fitz  # PyMuPDF
+
 from src.molde_registry import get_molde
 from src.pdf_type_detector import detect_pdf_type
 from src.extracao import filtrar_variaveis
@@ -63,11 +65,16 @@ def processar(
 
     # Organiza em árvore de pastas (reaproveita folder_writer) e anexa, em cada
     # registro, o caminho relativo da pasta funcional gerada (ex.: "ANA_SILVA/01_2026").
-    for reg in registros:
-        nome = reg.get("nome", "DESCONHECIDO")
-        periodo_safe = str(reg.get("periodo", "00_0000")).replace("/", "_")
-        reg["pasta"] = f"{_safe_name(nome)}/{periodo_safe}"
-        write_employee_folder(reg, output_dir=str(saida_dir), pdf_path=pdf_path)
+    # PDF aberto uma única vez e reusado (evita reabrir por pessoa em volume grande).
+    src_doc = fitz.open(pdf_path)
+    try:
+        for reg in registros:
+            nome = reg.get("nome", "DESCONHECIDO")
+            periodo_safe = str(reg.get("periodo", "00_0000")).replace("/", "_")
+            reg["pasta"] = f"{_safe_name(nome)}/{periodo_safe}"
+            write_employee_folder(reg, output_dir=str(saida_dir), src_doc=src_doc)
+    finally:
+        src_doc.close()
 
     # Estatísticas de gravação das pastas funcionais (controle operacional)
     estatisticas = _coletar_estatisticas(saida_dir, registros)

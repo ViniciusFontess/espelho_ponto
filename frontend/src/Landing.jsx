@@ -10,9 +10,9 @@ const fade = (d = 0) => ({
 })
 
 const PASSOS = [
-  ['01', 'Envie o PDF', 'O documento mensal com várias pessoas, em um único arquivo.'],
-  ['02', 'Escolha o molde', 'A plataforma identifica o tipo e separa cada pessoa automaticamente.'],
-  ['03', 'Baixe organizado', 'Um .zip com uma pasta por pessoa, nomeada e pronta para arquivar.'],
+  ['01', 'Envie o PDF', ''],
+  ['02', 'Escolha o molde', 'A plataforma identifica o tipo e separa cada PDF automaticamente.'],
+  ['03', 'Baixe organizado', 'Organize seus documentos a serem enviados para as pastas funcionais.'],
 ]
 
 export default function Landing({ onSelectMolde }) {
@@ -30,12 +30,8 @@ export default function Landing({ onSelectMolde }) {
                 <span style={{ width: 22, height: 1.5, background: COLORS.blue }} /> PLATAFORMA DE DOCUMENTOS · SEBRAE
               </div>
               <h1 style={{ fontSize: 46, lineHeight: 1.06, color: COLORS.ink, letterSpacing: '-.025em' }}>
-                Separe e organize<br />documentos com <span style={{ color: COLORS.blue }}>precisão</span>.
+                Plataforma <span style={{ color: COLORS.blue }}>inteligente</span><br />de documentos
               </h1>
-              <p style={{ color: COLORS.muted, fontSize: 16.5, marginTop: 20, lineHeight: 1.55, maxWidth: 560 }}>
-                Transforme um PDF com centenas de páginas em pastas individuais, nomeadas e validadas —
-                em segundos, sem trabalho manual.
-              </p>
             </div>
             {/* selo institucional SEBRAE */}
             <div style={{ position: 'relative', background: '#fff', border: `1px solid ${COLORS.line}`,
@@ -48,12 +44,13 @@ export default function Landing({ onSelectMolde }) {
 
           {/* como funciona */}
           <motion.div {...fade(.1)} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-            marginTop: 44, border: `1px solid ${COLORS.line}`, background: '#fff' }}>
+            marginTop: 44, marginRight: 10, border: `1.5px solid ${COLORS.blue}`, background: '#fff',
+            boxShadow: `0 1px 0 ${COLORS.blue}, 10px 10px 0 ${COLORS.blueSoft}` }}>
             {PASSOS.map(([n, t, d], i) => (
               <div key={n} style={{ padding: '22px 22px', borderLeft: i ? `1px solid ${COLORS.line}` : 'none' }}>
                 <div style={{ ...monoLabel, fontSize: 22, letterSpacing: '.02em', color: COLORS.blue, fontWeight: 700 }}>{n}</div>
                 <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.ink, marginTop: 10 }}>{t}</div>
-                <p style={{ fontSize: 12.5, color: COLORS.muted, marginTop: 6, lineHeight: 1.5 }}>{d}</p>
+                {d && <p style={{ fontSize: 12.5, color: COLORS.muted, marginTop: 6, lineHeight: 1.5 }}>{d}</p>}
               </div>
             ))}
           </motion.div>

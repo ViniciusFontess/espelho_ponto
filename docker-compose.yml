@@ -1,0 +1,8 @@
+# Homologação SEBRAE: mesmo padrão da captura-nfse (docker compose up -d web).
+# Porta do host configurável (default 8090, longe da NFSe 8078). Atrás do proxy.
+services:
+  web:
+    build: .
+    ports:
+      - "${PORT:-8090}:8000"
+    restart: unless-stopped

@@ -16,6 +16,11 @@ app.mount("/assets", StaticFiles(directory="web/static/assets"), name="assets")
 # Imagens-exemplo dos moldes (1ª página real de cada PDF-modelo).
 app.mount("/exemplos", StaticFiles(directory="web/exemplos"), name="exemplos")
 
+
+@app.get("/favicon.ico")
+def favicon():
+    return FileResponse("web/static/favicon.ico", media_type="image/x-icon")
+
 _jobs: dict[str, dict] = {}
 
 

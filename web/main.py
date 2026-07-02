@@ -17,9 +17,10 @@ app.mount("/assets", StaticFiles(directory="web/static/assets"), name="assets")
 app.mount("/exemplos", StaticFiles(directory="web/exemplos"), name="exemplos")
 
 
+@app.get("/favicon.png")
 @app.get("/favicon.ico")
 def favicon():
-    return FileResponse("web/static/favicon.ico", media_type="image/x-icon")
+    return FileResponse("web/static/favicon.png", media_type="image/png")
 
 _jobs: dict[str, dict] = {}
 

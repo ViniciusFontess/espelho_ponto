@@ -80,7 +80,7 @@ export default function Landing({ onSelectMolde }) {
             <div style={{ ...monoLabel, fontSize: 10, color: COLORS.muted, marginBottom: 6 }}>MODO 01</div>
             <h3 style={{ fontSize: 19, color: COLORS.ink }}>Separador com Molde</h3>
             <p style={{ fontSize: 13, color: COLORS.muted, marginTop: 8, flex: 1, lineHeight: 1.5 }}>
-              Para documentos de layout conhecido — espelho de ponto, holerite, contrato. Extração precisa por regras do molde.
+              Para documentos de layout conhecido, como espelho de ponto, holerite ou contrato. Extração precisa por regras do molde.
             </p>
             <div style={{ marginTop: 18, background: GRAD.cta, color: '#fff', padding: '13px 16px',
               fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

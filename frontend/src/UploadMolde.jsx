@@ -132,7 +132,7 @@ export default function UploadMolde({ onBack, onDone }) {
               })}
             </div>
             {ehExemplo && <p style={{ fontSize: 11.5, color: COLORS.amber, marginTop: 10, fontWeight: 500 }}>
-              Molde em desenvolvimento — seleção apenas demonstrativa.</p>}
+              Molde em desenvolvimento, seleção apenas demonstrativa.</p>}
           </div>
 
           {/* passo 03 — destino */}
@@ -177,7 +177,7 @@ export default function UploadMolde({ onBack, onDone }) {
             </div>
 
             <p style={{ fontSize: 11, color: COLORS.muted, marginTop: 10 }}>
-              No final, tudo é entregue em um <strong style={{ color: COLORS.ink }}>.zip</strong> com essa mesma estrutura — pronto para
+              No final, tudo é entregue em um <strong style={{ color: COLORS.ink }}>.zip</strong> com essa mesma estrutura, pronto para
               copiar para o servidor.
             </p>
           </div>

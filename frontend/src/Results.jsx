@@ -52,7 +52,7 @@ export default function Results({ jobId, onReset, onBack }) {
     const naoAssinou = funcs.filter(f => f.tipo === 'espelho' && !f.hash_presente).length
     const competencias = [...new Set(funcs.map(f => f.periodo).filter(Boolean))]
     const porCompetencia = {}
-    funcs.forEach(f => { const c = f.periodo || '—'; porCompetencia[c] = (porCompetencia[c] || 0) + 1 })
+    funcs.forEach(f => { const c = f.periodo || '-'; porCompetencia[c] = (porCompetencia[c] || 0) + 1 })
     const colunas = COLUNAS.filter(col => funcs.some(f => f[col.key] != null && f[col.key] !== ''))
     return { ehEspelho, assinados, invalidas, naoAssinou, competencias, porCompetencia, colunas }
   }, [funcs])
@@ -165,9 +165,9 @@ export default function Results({ jobId, onReset, onBack }) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                           <Folder size={15} color={COLORS.blue} />
                           <div>
-                            <div style={{ fontWeight: 600, color: COLORS.ink }}>{f.nome || '—'}</div>
+                            <div style={{ fontWeight: 600, color: COLORS.ink }}>{f.nome || '-'}</div>
                             <div style={{ fontFamily: FONT.mono, fontSize: 10.5, color: COLORS.muted, marginTop: 1 }}>
-                              {f.pasta ? `${f.pasta}/` : '—'}
+                              {f.pasta ? `${f.pasta}/` : '-'}
                             </div>
                           </div>
                         </div>
@@ -175,14 +175,14 @@ export default function Results({ jobId, onReset, onBack }) {
                       {analise.colunas.filter(c => c.key !== 'nome').map(c => (
                         <td key={c.key} style={{ ...td, ...(c.key === 'nome' ? { fontWeight: 600, color: COLORS.ink } : { color: COLORS.inkSoft }),
                           ...(['matricula', 'cpf', 'pagina', 'periodo'].includes(c.key) ? { fontFamily: FONT.mono, fontSize: 12.5 } : {}) }}>
-                          {f[c.key] != null && f[c.key] !== '' ? String(f[c.key]) : '—'}
+                          {f[c.key] != null && f[c.key] !== '' ? String(f[c.key]) : '-'}
                         </td>
                       ))}
                       {analise.ehEspelho && (
                         <td style={td}>
                           {st ? <span style={{ ...monoLabel, fontSize: 10, padding: '3px 9px', color: st.cor,
                             background: st.bg, border: `1px solid ${st.cor}33` }}>{st.label}</span>
-                            : <span style={{ color: COLORS.muted }}>—</span>}
+                            : <span style={{ color: COLORS.muted }}>-</span>}
                         </td>
                       )}
                     </tr>

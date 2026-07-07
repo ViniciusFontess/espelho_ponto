@@ -30,7 +30,7 @@ class Molde:
 _REGISTRY: dict[str, Molde] = {
     "espelho_eletronico": Molde(
         id="espelho_eletronico",
-        nome="Espelho de Ponto — Eletrônico",
+        nome="Espelho de Ponto - Eletrônico",
         status="ativo",
         variaveis=["nome", "matricula", "cpf", "pis", "cargo",
                    "equipe", "periodo", "dias", "assinatura"],
@@ -38,18 +38,10 @@ _REGISTRY: dict[str, Molde] = {
     ),
     "espelho_jornada": Molde(
         id="espelho_jornada",
-        nome="Espelho de Ponto — Jornada",
+        nome="Espelho de Ponto - Jornada",
         status="ativo",
         variaveis=["nome", "competencia", "pagina"],
         parser=parse_jornada_pdf,
-    ),
-    "ferias_sebrae": Molde(
-        id="ferias_sebrae",
-        nome="Férias SEBRAE",
-        status="exemplo",
-        variaveis=["nome", "matricula", "periodo_aquisitivo",
-                   "periodo_gozo", "saldo"],
-        parser=None,
     ),
 }
 

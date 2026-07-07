@@ -46,6 +46,96 @@ def _safe_name(name: str) -> str:
     return safe or "DESCONHECIDO"
 
 
+# Rótulos legíveis dos campos (espelha o front) para a ficha.
+_ROTULOS = [
+    ("Matrícula", "matricula"), ("CPF", "cpf"), ("PIS", "pis"),
+    ("Cargo", "cargo"), ("Equipe / Setor", "equipe"), ("Página de origem", "pagina"),
+]
+
+
+def _status_assinatura(data: dict):
+    """(texto, cor_hex) do status de assinatura; None se não for espelho."""
+    if data.get("tipo") != "espelho":
+        return None
+    if data.get("hash_valido"):
+        return "ASSINADO", "#0a8f5b"
+    if data.get("hash_presente"):
+        return "ASSINATURA INVÁLIDA", "#b8740a"
+    return "NÃO ASSINOU", "#d23541"
+
+
+def _write_ficha_pdf(data: dict, out_path: Path) -> None:
+    """Gera uma ficha PDF legível (uma pessoa/competência) — melhor que abrir o JSON.
+    Best-effort: se o reportlab falhar, não quebra a gravação da pasta."""
+    try:
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.units import mm
+        from reportlab.lib import colors
+    except Exception:
+        return
+
+    W, H = A4
+    blue = colors.HexColor("#2560E6")
+    ink = colors.HexColor("#0f1222")
+    muted = colors.HexColor("#6b7280")
+    line = colors.HexColor("#e3e6ef")
+
+    c = canvas.Canvas(str(out_path), pagesize=A4)
+    x, w = 25 * mm, W - 50 * mm
+    y = H - 30 * mm
+
+    # cabeçalho
+    c.setFillColor(blue)
+    c.rect(x, y, w, 12 * mm, fill=1, stroke=0)
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(x + 6 * mm, y + 4 * mm, "SEBRAE  ·  ESPELHO DE PONTO")
+    c.setFont("Helvetica", 9)
+    c.drawRightString(x + w - 6 * mm, y + 4.3 * mm, str(data.get("tipo", "")).capitalize())
+
+    # nome
+    y -= 17 * mm
+    c.setFillColor(ink)
+    c.setFont("Helvetica-Bold", 20)
+    c.drawString(x, y, str(data.get("nome", "")).upper()[:48])
+
+    # competência
+    y -= 8 * mm
+    comp = data.get("periodo") or data.get("competencia") or "-"
+    c.setFillColor(muted)
+    c.setFont("Helvetica", 11)
+    c.drawString(x, y, f"Competência: {comp}")
+
+    # divisória
+    y -= 6 * mm
+    c.setStrokeColor(line)
+    c.line(x, y, x + w, y)
+
+    # campos
+    y -= 11 * mm
+    c.setFont("Helvetica", 12)
+    for label, key in _ROTULOS:
+        val = data.get(key)
+        if val in (None, ""):
+            continue
+        c.setFillColor(muted)
+        c.drawString(x, y, f"{label}:")
+        c.setFillColor(ink)
+        c.drawString(x + 50 * mm, y, str(val))
+        y -= 8 * mm
+
+    # status de assinatura
+    st = _status_assinatura(data)
+    if st:
+        y -= 3 * mm
+        c.setFillColor(colors.HexColor(st[1]))
+        c.setFont("Helvetica-Bold", 13)
+        c.drawString(x, y, f"Status de assinatura: {st[0]}")
+
+    c.save()
+
+
 def write_employee_folder(
     data: dict,
     output_dir: str = "output",
@@ -73,11 +163,14 @@ def write_employee_folder(
     employee_dir = Path(output_dir) / _safe_name(nome) / period_safe
     employee_dir.mkdir(parents=True, exist_ok=True)
 
-    # Write JSON
+    # Write JSON (uso de máquina)
     json_path = employee_dir / "dados.json"
     json_path.write_text(
         json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+
+    # Ficha PDF legível (o que a pessoa abre pra ver os dados, em vez do JSON)
+    _write_ficha_pdf(data, employee_dir / "ficha.pdf")
 
     # Optionally extract and save the PDF page. src_doc evita reabrir o PDF a
     # cada pessoa (O(N²) em volume grande) — abra uma vez e reaproveite.

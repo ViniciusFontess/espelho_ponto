@@ -5,7 +5,7 @@ Output layout:
   output/
     <NOME_FUNCIONARIO>/
       <MM_YYYY>/
-        dados.json       ← parsed employee record
+        dados.pdf        ← ficha legível (nome, competência, campos, status)
         pagina_N.pdf     ← extracted page (if requested)
 """
 from __future__ import annotations
@@ -144,7 +144,8 @@ def write_employee_folder(
 ) -> Path:
     """
     Write an employee record (and optionally their PDF page) to:
-      output_dir / <safe_nome> / <MM_YYYY> / dados.json
+      output_dir / <safe_nome> / <MM_YYYY> / dados.pdf   (ficha legível)
+                                             pagina_N.pdf (página original)
 
     Args:
         data:       Employee record dict (must have 'nome', 'periodo', 'pagina').
@@ -152,7 +153,7 @@ def write_employee_folder(
         pdf_path:   Path to the source PDF, used to extract and save the page.
 
     Returns:
-        Path to the created dados.json file.
+        Path to the created dados.pdf file.
     """
     nome = data.get("nome", "DESCONHECIDO")
     periodo = data.get("periodo", "00_0000")
@@ -163,14 +164,9 @@ def write_employee_folder(
     employee_dir = Path(output_dir) / _safe_name(nome) / period_safe
     employee_dir.mkdir(parents=True, exist_ok=True)
 
-    # Write JSON (uso de máquina)
-    json_path = employee_dir / "dados.json"
-    json_path.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-
-    # Ficha PDF legível (o que a pessoa abre pra ver os dados, em vez do JSON)
-    _write_ficha_pdf(data, employee_dir / "ficha.pdf")
+    # Ficha PDF legível "dados.pdf" — o que a pessoa abre pra ver os dados.
+    ficha_path = employee_dir / "dados.pdf"
+    _write_ficha_pdf(data, ficha_path)
 
     # Optionally extract and save the PDF page. src_doc evita reabrir o PDF a
     # cada pessoa (O(N²) em volume grande) — abra uma vez e reaproveite.
@@ -188,7 +184,7 @@ def write_employee_folder(
         except Exception:
             pass  # PDF extraction is best-effort
 
-    return json_path
+    return ficha_path
 
 
 def write_employee_json(data: dict, output_dir: str = "output") -> Path:

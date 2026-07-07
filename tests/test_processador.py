@@ -17,7 +17,7 @@ def test_processa_eletronico_gera_zip(tmp_path):
     # variável não selecionada não deve aparecer
     assert "cpf" not in res["funcionarios"][0]
     with zipfile.ZipFile(res["zip_path"]) as zf:
-        assert any(n.endswith("dados.json") for n in zf.namelist())
+        assert any(n.endswith("dados.pdf") for n in zf.namelist())
 
 
 def test_processa_jornada_dez_funcionarios(tmp_path):

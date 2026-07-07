@@ -223,8 +223,8 @@ function ControlePastas({ e }) {
   const cells = [
     { n: e.pastas_funcionais, label: 'Pastas funcionais', sub: 'uma por pessoa' },
     { n: e.subpastas_competencia, label: 'Subpastas', sub: 'por competência' },
-    { n: e.pdf_gravados, label: 'Documentos gravados', sub: 'páginas individuais (.pdf)' },
-    { n: e.json_gravados, label: 'Registros gravados', sub: 'dados extraídos (.json)' },
+    { n: e.fichas, label: 'Fichas geradas', sub: 'dados.pdf legível' },
+    { n: e.paginas, label: 'Páginas extraídas', sub: 'espelho original (.pdf)' },
     { n: e.arquivos_gravados, label: 'Arquivos no total', sub: 'prontos no .zip' },
   ]
   return (

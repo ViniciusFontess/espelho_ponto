@@ -97,15 +97,15 @@ def _coletar_estatisticas(saida_dir: Path, registros: list) -> dict:
     pastas_pessoa = [p for p in saida_dir.iterdir() if p.is_dir()]
     subpastas = [d for p in pastas_pessoa for d in p.iterdir() if d.is_dir()]
     arquivos = [f for f in saida_dir.rglob("*") if f.is_file()]
-    json_gravados = sum(1 for f in arquivos if f.name == "dados.json")
-    pdf_gravados = sum(1 for f in arquivos if f.suffix.lower() == ".pdf")
+    fichas = sum(1 for f in arquivos if f.name == "dados.pdf")
+    paginas = sum(1 for f in arquivos if f.name.startswith("pagina") and f.suffix.lower() == ".pdf")
     competencias = {r.get("periodo") for r in registros if r.get("periodo")}
     return {
         "pessoas": len(registros),
         "pastas_funcionais": len(pastas_pessoa),
         "subpastas_competencia": len(subpastas),
         "arquivos_gravados": len(arquivos),
-        "json_gravados": json_gravados,
-        "pdf_gravados": pdf_gravados,
+        "fichas": fichas,
+        "paginas": paginas,
         "competencias": len(competencias),
     }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Topbar, StatusFooter } from './Chrome'
+import { Topbar, StatusFooter, Ticks } from './Chrome'
 import { Download, Folder } from './Icons'
 import { COLORS, FONT, GRAD, monoLabel } from './theme'
 
@@ -57,10 +57,7 @@ export default function Results({ jobId, onReset, onBack }) {
     return { ehEspelho, assinados, invalidas, naoAssinou, competencias, porCompetencia, colunas }
   }, [funcs])
 
-  if (status === 'processing') return (
-    <Frame><Centered><Spinner /><p style={{ color: COLORS.muted, fontSize: 14 }}>Separando documentos…</p>
-      <span style={{ ...monoLabel, fontSize: 10, color: COLORS.muted }}>ISSO LEVA POUCOS SEGUNDOS</span></Centered></Frame>
-  )
+  if (status === 'processing') return <Frame><Processando /></Frame>
   if (status === 'error') return (
     <Frame onBack={onBack}><Centered>
       <p style={{ color: COLORS.red, fontWeight: 600 }}>Não foi possível processar</p>
@@ -209,6 +206,48 @@ function Frame({ children, onBack }) {
   )
 }
 
+// Tela de processamento (o ~8s enquanto separa e gera as fichas).
+const PASSOS_LOADING = [
+  'Lendo o documento…',
+  'Identificando cada pessoa…',
+  'Separando por competência…',
+  'Gerando as fichas em PDF…',
+  'Montando o pacote final…',
+]
+function Processando() {
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setI(v => (v + 1) % PASSOS_LOADING.length), 1600)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <main className="grid-bg" style={{ flex: 1, display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', padding: 40, gap: 24 }}>
+      {/* quadrado com barra de "scanner" */}
+      <div style={{ position: 'relative', width: 68, height: 68, border: `1.5px solid ${COLORS.blue}`,
+        overflow: 'hidden', background: '#fff' }}>
+        <Ticks color={COLORS.blue} />
+        <motion.div animate={{ y: [4, 56, 4] }} transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ position: 'absolute', left: 6, right: 6, height: 3, background: COLORS.blue }} />
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 19, fontWeight: 700, color: COLORS.ink }}>Separando documentos</div>
+        <motion.div key={i} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+          style={{ fontSize: 13.5, color: COLORS.muted, marginTop: 7, minHeight: 18 }}>{PASSOS_LOADING[i]}</motion.div>
+      </div>
+
+      {/* barra indeterminada */}
+      <div style={{ width: 280, height: 6, border: `1px solid ${COLORS.line}`, background: '#fff', overflow: 'hidden' }}>
+        <motion.div animate={{ x: ['-110%', '290%'] }} transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ width: '40%', height: '100%', background: COLORS.blue }} />
+      </div>
+
+      <span style={{ ...monoLabel, fontSize: 10, color: COLORS.muted }}>PROCESSAMENTO EM ANDAMENTO · LEVA POUCOS SEGUNDOS</span>
+    </main>
+  )
+}
+
 function Secao({ titulo, children }) {
   return (
     <section style={{ marginTop: 28 }}>
@@ -280,6 +319,3 @@ const btnGhost = { background: '#fff', border: `1px solid ${COLORS.line}`, color
   padding: '11px 16px', fontFamily: FONT.sans, fontWeight: 600, fontSize: 13, cursor: 'pointer' }
 const Centered = ({ children }) => (
   <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', justifyContent: 'center', padding: 40 }}>{children}</main>)
-const Spinner = () => (
-  <div style={{ width: 28, height: 28, border: `2.5px solid ${COLORS.line}`, borderTopColor: COLORS.blue,
-    borderRadius: '50%', animation: 'spin .8s linear infinite' }} />)

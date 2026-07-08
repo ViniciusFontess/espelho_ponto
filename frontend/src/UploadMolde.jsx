@@ -151,10 +151,10 @@ export default function UploadMolde({ onBack, onDone }) {
                   desc: 'Uma pasta por colaborador. O nome é normalizado: sem acentos e com “_” no lugar de espaços.' },
                 { ind: 2, path: 'MM_AAAA/', cor: COLORS.ink, tipo: 'SUBPASTA',
                   desc: 'Subpasta por competência (mês e ano de referência).' },
-                { ind: 3, path: 'dados.json', cor: COLORS.inkSoft, tipo: 'ARQUIVO',
-                  desc: 'Informações extraídas da pessoa (nome, matrícula, status…).' },
+                { ind: 3, path: 'dados.pdf', cor: COLORS.inkSoft, tipo: 'ARQUIVO',
+                  desc: 'Ficha legível da pessoa (nome, competência, campos e status de assinatura).' },
                 { ind: 3, path: 'pagina.pdf', cor: COLORS.inkSoft, tipo: 'ARQUIVO',
-                  desc: 'A página individual daquela pessoa, recortada do PDF.' },
+                  desc: 'A página original do espelho daquela pessoa, recortada do PDF.' },
               ].map((r, i) => (
                 <div key={i} style={{ display: 'flex', gap: 12, padding: '10px 14px',
                   borderTop: i ? `1px solid ${COLORS.line}` : 'none', background: r.ind === 0 ? COLORS.blueSoft : '#fff' }}>

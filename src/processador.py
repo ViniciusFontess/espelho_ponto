@@ -89,6 +89,7 @@ def processar(
         "funcionarios": registros,
         "estatisticas": estatisticas,
         "zip_path": str(zip_path),
+        "saida_dir": str(saida_dir),
     }
 
 

@@ -27,6 +27,17 @@ export default function Results({ jobId, onReset, onBack }) {
   const [status, setStatus] = useState('processing')
   const [data, setData] = useState(null)
   const [erro, setErro] = useState('')
+  const [envio, setEnvio] = useState(null) // 'enviando' | {ok, msg}
+
+  const enviarOneDrive = async () => {
+    setEnvio('enviando')
+    try {
+      const r = await fetch(`/onedrive/enviar/${jobId}`, { method: 'POST' })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || 'Falha no envio')
+      setEnvio({ ok: true, msg: `${d.enviados} arquivos enviados para a pasta "${d.pasta}" · ${d.ja_existentes} de ${d.competencias} competência(s) já existiam` })
+    } catch (e) { setEnvio({ ok: false, msg: e.message }) }
+  }
 
   useEffect(() => {
     let alive = true
@@ -93,11 +104,29 @@ export default function Results({ jobId, onReset, onBack }) {
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onReset} style={btnGhost}>Novo upload</button>
-            <a href={`/download/${jobId}`} style={{ textDecoration: 'none', background: GRAD.cta, color: '#fff',
-              fontWeight: 700, fontSize: 13, padding: '11px 18px', display: 'inline-flex', alignItems: 'center', gap: 9 }}>
-              <Download color="#fff" /> Baixar .zip</a>
+            <a href={`/download/${jobId}`} style={{ textDecoration: 'none', background: '#fff', color: COLORS.inkSoft,
+              border: `1px solid ${COLORS.line}`, fontWeight: 600, fontSize: 13, padding: '11px 18px',
+              display: 'inline-flex', alignItems: 'center', gap: 9 }}>
+              <Download color={COLORS.inkSoft} /> Baixar .zip</a>
+            {data.onedrive_configurado && (
+              <button onClick={enviarOneDrive} disabled={envio === 'enviando'}
+                style={{ background: GRAD.cta, color: '#fff', border: 'none', fontWeight: 700, fontSize: 13,
+                  padding: '11px 18px', cursor: envio === 'enviando' ? 'wait' : 'pointer' }}>
+                {envio === 'enviando' ? 'Enviando…' : 'Confirmar envio para o OneDrive'}
+              </button>
+            )}
           </div>
         </div>
+
+        {/* resultado do envio ao OneDrive */}
+        {envio && envio !== 'enviando' && (
+          <div style={{ marginTop: 14, padding: '11px 14px', fontSize: 13, fontWeight: 500,
+            border: `1px solid ${envio.ok ? COLORS.emerald : COLORS.red}`,
+            background: envio.ok ? COLORS.emeraldSoft : COLORS.redSoft,
+            color: envio.ok ? COLORS.emerald : COLORS.red }}>
+            {envio.ok ? '✓ ' : ''}{envio.msg}
+          </div>
+        )}
 
         {/* KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(${kpis.length}, 1fr)`, gap: 0,

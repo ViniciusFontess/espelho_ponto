@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 
 from src.molde_registry import list_moldes
 from src.processador import processar, MoldeEmDesenvolvimentoError
+from src import destino_onedrive
 
 app = FastAPI(title="Plataforma de Separação de Documentos — SEBRAE")
 app.mount("/assets", StaticFiles(directory="web/static/assets"), name="assets")
@@ -64,10 +65,29 @@ def get_results(job_id: str):
     job = _jobs.get(job_id)
     if not job:
         return JSONResponse(status_code=404, content={"error": "Job não encontrado."})
-    # não vaza o caminho absoluto do zip; só sinaliza disponibilidade
-    public = {k: v for k, v in job.items() if k != "zip_path"}
+    # não vaza caminhos absolutos; só sinaliza disponibilidade/capacidades
+    public = {k: v for k, v in job.items() if k not in ("zip_path", "saida_dir")}
     public["zip_disponivel"] = bool(job.get("zip_path"))
+    public["onedrive_configurado"] = destino_onedrive.configurado()
     return public
+
+
+@app.post("/onedrive/enviar/{job_id}")
+async def enviar_onedrive(job_id: str):
+    job = _jobs.get(job_id)
+    if not job or job.get("status") != "done":
+        return JSONResponse(status_code=404, content={"error": "Job não encontrado."})
+    if not destino_onedrive.configurado():
+        return JSONResponse(status_code=400,
+                            content={"error": "Envio ao OneDrive não configurado neste ambiente."})
+    if not job.get("saida_dir"):
+        return JSONResponse(status_code=400, content={"error": "Resultado indisponível para envio."})
+    try:
+        resumo = await asyncio.to_thread(
+            destino_onedrive.enviar, job["saida_dir"], job.get("tipo"))
+        return resumo
+    except Exception as exc:  # falha do Graph vira mensagem, não 500 cru
+        return JSONResponse(status_code=502, content={"error": f"Falha no envio: {exc}"})
 
 
 @app.get("/download/{job_id}")
@@ -89,6 +109,7 @@ async def _process(job_id, pdf_path, molde_id, variaveis):
             "results": res["funcionarios"],
             "estatisticas": res.get("estatisticas"),
             "zip_path": res["zip_path"],
+            "saida_dir": res.get("saida_dir"),
         }
     except MoldeEmDesenvolvimentoError as exc:
         _jobs[job_id] = {"status": "error", "error": str(exc)}

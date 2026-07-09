@@ -2,6 +2,9 @@
 # python:3.12-slim garante wheels do PyMuPDF (sem toolchain de build).
 FROM python:3.12-slim
 
+# UTF-8 no processo: garante que ONEDRIVE_BASE (com acento) decodifica certo.
+ENV PYTHONUTF8=1 PYTHONIOENCODING=utf-8
+
 WORKDIR /app
 
 COPY requirements.txt .

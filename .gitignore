@@ -1,4 +1,7 @@
 .superpowers/
+onedrive.env
+.env
+*.env
 _tmp_jobs/
 output/
 tmp_*.pdf

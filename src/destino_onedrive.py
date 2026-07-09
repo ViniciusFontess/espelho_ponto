@@ -16,6 +16,7 @@ Idempotente: cria pastas que faltam (o Graph cria intermediárias), nunca apaga.
 """
 import os
 from pathlib import Path
+from urllib.parse import quote
 
 import httpx
 
@@ -56,16 +57,18 @@ def caminho_remoto(tipo: str, nome: str, competencia: str, arquivo: str = "") ->
 
 
 def _existe(path: str, token: str, user: str) -> bool:
+    p = quote(path.strip("/"), safe="/")  # aguenta espaço/acento, mantém as '/'
     r = httpx.get(
-        f"{_GRAPH}/users/{user}/drive/root:/{path}",
+        f"{_GRAPH}/users/{user}/drive/root:/{p}",
         headers={"Authorization": f"Bearer {token}"}, timeout=30,
     )
     return r.status_code == 200
 
 
 def _upload(path: str, data: bytes, token: str, user: str) -> str:
+    p = quote(path.strip("/"), safe="/")  # aguenta espaço/acento, mantém as '/'
     r = httpx.put(
-        f"{_GRAPH}/users/{user}/drive/root:/{path}:/content",
+        f"{_GRAPH}/users/{user}/drive/root:/{p}:/content",
         headers={"Authorization": f"Bearer {token}"}, content=data, timeout=120,
     )
     r.raise_for_status()

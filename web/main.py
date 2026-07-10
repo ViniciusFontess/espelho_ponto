@@ -69,11 +69,13 @@ def get_results(job_id: str):
     public = {k: v for k, v in job.items() if k not in ("zip_path", "saida_dir")}
     public["zip_disponivel"] = bool(job.get("zip_path"))
     public["onedrive_configurado"] = destino_onedrive.configurado()
+    public["onedrive_pastas"] = (
+        destino_onedrive.pastas_permitidas() if destino_onedrive.configurado() else [])
     return public
 
 
 @app.post("/onedrive/enviar/{job_id}")
-async def enviar_onedrive(job_id: str):
+async def enviar_onedrive(job_id: str, pasta: str = None):
     job = _jobs.get(job_id)
     if not job or job.get("status") != "done":
         return JSONResponse(status_code=404, content={"error": "Job não encontrado."})
@@ -82,9 +84,14 @@ async def enviar_onedrive(job_id: str):
                             content={"error": "Envio ao OneDrive não configurado neste ambiente."})
     if not job.get("saida_dir"):
         return JSONResponse(status_code=400, content={"error": "Resultado indisponível para envio."})
+    permitidas = destino_onedrive.pastas_permitidas()
+    if pasta and pasta not in permitidas:  # allowlist: nada de caminho arbitrário
+        return JSONResponse(status_code=400, content={"error": "Pasta de destino inválida."})
+    pasta = pasta or permitidas[0]
     try:
         resumo = await asyncio.to_thread(
-            destino_onedrive.enviar, job["saida_dir"], job.get("tipo"))
+            destino_onedrive.enviar, job["saida_dir"], job.get("tipo"),
+            pasta, job.get("molde_id"))
         return resumo
     except Exception as exc:  # falha do Graph vira mensagem, não 500 cru
         return JSONResponse(status_code=502, content={"error": f"Falha no envio: {exc}"})

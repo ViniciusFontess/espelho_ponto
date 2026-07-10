@@ -28,11 +28,12 @@ export default function Results({ jobId, onReset, onBack }) {
   const [data, setData] = useState(null)
   const [erro, setErro] = useState('')
   const [envio, setEnvio] = useState(null) // 'enviando' | {ok, msg}
+  const [pasta, setPasta] = useState('')
 
   const enviarOneDrive = async () => {
     setEnvio('enviando')
     try {
-      const r = await fetch(`/onedrive/enviar/${jobId}`, { method: 'POST' })
+      const r = await fetch(`/onedrive/enviar/${jobId}?pasta=${encodeURIComponent(pasta)}`, { method: 'POST' })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || 'Falha no envio')
       setEnvio({ ok: true, msg: `${d.enviados} arquivos enviados para a pasta "${d.pasta}" · ${d.ja_existentes} de ${d.competencias} competência(s) já existiam` })
@@ -54,6 +55,10 @@ export default function Results({ jobId, onReset, onBack }) {
     poll()
     return () => { alive = false }
   }, [jobId])
+
+  useEffect(() => {  // pré-seleciona a primeira pasta permitida
+    if (data?.onedrive_pastas?.length && !pasta) setPasta(data.onedrive_pastas[0])
+  }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const funcs = data?.results || []
   const analise = useMemo(() => {
@@ -109,11 +114,19 @@ export default function Results({ jobId, onReset, onBack }) {
               display: 'inline-flex', alignItems: 'center', gap: 9 }}>
               <Download color={COLORS.inkSoft} /> Baixar .zip</a>
             {data.onedrive_configurado && (
-              <button onClick={enviarOneDrive} disabled={envio === 'enviando'}
-                style={{ background: GRAD.cta, color: '#fff', border: 'none', fontWeight: 700, fontSize: 13,
-                  padding: '11px 18px', cursor: envio === 'enviando' ? 'wait' : 'pointer' }}>
-                {envio === 'enviando' ? 'Enviando…' : 'Confirmar envio para o OneDrive'}
-              </button>
+              <div style={{ display: 'flex', border: `1.5px solid ${COLORS.blue}` }}>
+                <select value={pasta} onChange={e => setPasta(e.target.value)} title="Pasta de destino no OneDrive"
+                  style={{ border: 'none', borderRight: `1px solid ${COLORS.blue}`, background: COLORS.blueSoft,
+                    color: COLORS.blueDark, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 600,
+                    padding: '0 10px', cursor: 'pointer' }}>
+                  {data.onedrive_pastas.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <button onClick={enviarOneDrive} disabled={envio === 'enviando' || !pasta}
+                  style={{ background: GRAD.cta, color: '#fff', border: 'none', fontWeight: 700, fontSize: 13,
+                    padding: '11px 16px', cursor: envio === 'enviando' ? 'wait' : 'pointer' }}>
+                  {envio === 'enviando' ? 'Enviando…' : 'Confirmar envio para o OneDrive'}
+                </button>
+              </div>
             )}
           </div>
         </div>

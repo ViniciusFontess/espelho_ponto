@@ -117,10 +117,12 @@ def _registrar_historico(base: str, registro: dict, token: str, user: str) -> No
         pass
 
 
-def enviar(saida_dir, tipo: str, pasta: str = None, molde: str = None) -> dict:
+def enviar(saida_dir, tipo: str, pasta: str = None, molde: str = None,
+           progresso=None) -> dict:
     """Sobe os PDFs de cada pessoa/competência da árvore local para o OneDrive,
     na pasta escolhida, e registra a submissão no histórico.
 
+    progresso: callable(enviados, total) opcional, chamado a cada arquivo.
     Idempotente: marca competências que já existiam (nada é apagado). Retorna
     {"enviados", "pessoas", "competencias", "ja_existentes", "pasta"}.
     """
@@ -129,6 +131,9 @@ def enviar(saida_dir, tipo: str, pasta: str = None, molde: str = None) -> dict:
     pasta = pasta or os.environ.get("ONEDRIVE_PASTA") or pastas_permitidas()[0]
     base = os.environ.get("ONEDRIVE_BASE", _BASE_PADRAO)
 
+    total = sum(1 for _ in Path(saida_dir).rglob("*.pdf"))
+    if progresso:
+        progresso(0, total)
     enviados = pessoas = competencias = ja_existentes = 0
     for pessoa_dir in sorted(p for p in Path(saida_dir).iterdir() if p.is_dir()):
         nome = pessoa_dir.name
@@ -143,6 +148,8 @@ def enviar(saida_dir, tipo: str, pasta: str = None, molde: str = None) -> dict:
                     _upload(caminho_remoto(tipo, nome, comp, f.name, pasta=pasta),
                             f.read_bytes(), token, user)
                     enviados += 1
+                    if progresso:
+                        progresso(enviados, total)
 
     resumo = {"enviados": enviados, "pessoas": pessoas, "competencias": competencias,
               "ja_existentes": ja_existentes, "pasta": pasta}

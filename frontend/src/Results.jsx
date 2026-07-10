@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Topbar, StatusFooter, Ticks } from './Chrome'
-import { Download, Folder } from './Icons'
+import { Folder } from './Icons'
 import { COLORS, FONT, GRAD, monoLabel } from './theme'
 
 const POLL = 2000
@@ -27,16 +27,31 @@ export default function Results({ jobId, onReset, onBack }) {
   const [status, setStatus] = useState('processing')
   const [data, setData] = useState(null)
   const [erro, setErro] = useState('')
-  const [envio, setEnvio] = useState(null) // 'enviando' | {ok, msg}
-  const [pasta, setPasta] = useState('')
+  const [envio, setEnvio] = useState(null) // {status:'enviando',enviados,total} | {ok,msg}
 
   const enviarOneDrive = async () => {
-    setEnvio('enviando')
+    setEnvio({ status: 'enviando', enviados: 0, total: 0 })
     try {
-      const r = await fetch(`/onedrive/enviar/${jobId}?pasta=${encodeURIComponent(pasta)}`, { method: 'POST' })
+      const r = await fetch(`/onedrive/enviar/${jobId}`, { method: 'POST' })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || 'Falha no envio')
-      setEnvio({ ok: true, msg: `${d.enviados} arquivos enviados para a pasta "${d.pasta}" · ${d.ja_existentes} de ${d.competencias} competência(s) já existiam` })
+      pollEnvio()
+    } catch (e) { setEnvio({ ok: false, msg: e.message }) }
+  }
+
+  const pollEnvio = async () => {
+    try {
+      const r = await fetch(`/onedrive/status/${jobId}`)
+      const d = await r.json()
+      if (d.status === 'enviando') {
+        setEnvio({ status: 'enviando', enviados: d.enviados || 0, total: d.total || 0 })
+        setTimeout(pollEnvio, 2000); return
+      }
+      if (d.status === 'erro') { setEnvio({ ok: false, msg: d.error }); return }
+      if (d.status === 'done') {
+        setEnvio({ ok: true, msg: `${d.enviados} arquivos enviados para a pasta "${d.pasta}" · ${d.ja_existentes} de ${d.competencias} competência(s) já existiam` }); return
+      }
+      setTimeout(pollEnvio, 2000)
     } catch (e) { setEnvio({ ok: false, msg: e.message }) }
   }
 
@@ -55,10 +70,6 @@ export default function Results({ jobId, onReset, onBack }) {
     poll()
     return () => { alive = false }
   }, [jobId])
-
-  useEffect(() => {  // pré-seleciona a primeira pasta permitida
-    if (data?.onedrive_pastas?.length && !pasta) setPasta(data.onedrive_pastas[0])
-  }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const funcs = data?.results || []
   const analise = useMemo(() => {
@@ -109,30 +120,37 @@ export default function Results({ jobId, onReset, onBack }) {
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onReset} style={btnGhost}>Novo upload</button>
-            <a href={`/download/${jobId}`} style={{ textDecoration: 'none', background: '#fff', color: COLORS.inkSoft,
-              border: `1px solid ${COLORS.line}`, fontWeight: 600, fontSize: 13, padding: '11px 18px',
-              display: 'inline-flex', alignItems: 'center', gap: 9 }}>
-              <Download color={COLORS.inkSoft} /> Baixar .zip</a>
             {data.onedrive_configurado && (
-              <div style={{ display: 'flex', border: `1.5px solid ${COLORS.blue}` }}>
-                <select value={pasta} onChange={e => setPasta(e.target.value)} title="Pasta de destino no OneDrive"
-                  style={{ border: 'none', borderRight: `1px solid ${COLORS.blue}`, background: COLORS.blueSoft,
-                    color: COLORS.blueDark, fontFamily: FONT.sans, fontSize: 12.5, fontWeight: 600,
-                    padding: '0 10px', cursor: 'pointer' }}>
-                  {data.onedrive_pastas.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
-                <button onClick={enviarOneDrive} disabled={envio === 'enviando' || !pasta}
-                  style={{ background: GRAD.cta, color: '#fff', border: 'none', fontWeight: 700, fontSize: 13,
-                    padding: '11px 16px', cursor: envio === 'enviando' ? 'wait' : 'pointer' }}>
-                  {envio === 'enviando' ? 'Enviando…' : 'Confirmar envio para o OneDrive'}
-                </button>
-              </div>
+              <button onClick={enviarOneDrive} disabled={envio?.status === 'enviando'}
+                style={{ background: GRAD.cta, color: '#fff', border: 'none', fontWeight: 700, fontSize: 13,
+                  padding: '11px 18px', cursor: envio?.status === 'enviando' ? 'wait' : 'pointer' }}>
+                {envio?.status === 'enviando'
+                  ? `Enviando…${envio.total ? ` ${envio.enviados}/${envio.total}` : ''}`
+                  : `Confirmar envio para o OneDrive${data.pasta ? ` (${data.pasta})` : ''}`}
+              </button>
             )}
           </div>
         </div>
 
-        {/* resultado do envio ao OneDrive */}
-        {envio && envio !== 'enviando' && (
+        {/* envio ao OneDrive: loading com progresso */}
+        {envio?.status === 'enviando' && (
+          <div style={{ marginTop: 14, padding: '13px 16px', border: `1px solid ${COLORS.blue}`, background: COLORS.blueSoft }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: COLORS.blueDark }}>Enviando para o OneDrive…</span>
+              <span style={{ fontFamily: FONT.mono, fontSize: 12, color: COLORS.blueDark }}>
+                {envio.total ? `${envio.enviados} / ${envio.total} arquivos` : 'preparando…'}</span>
+            </div>
+            <div style={{ height: 6, background: '#fff', border: `1px solid ${COLORS.blue}44`, marginTop: 9, overflow: 'hidden' }}>
+              <motion.div animate={{ width: envio.total ? `${Math.round((envio.enviados / envio.total) * 100)}%` : '12%' }}
+                transition={{ duration: .3 }} style={{ height: '100%', background: GRAD.cta }} />
+            </div>
+            <p style={{ fontSize: 11.5, color: COLORS.muted, marginTop: 7 }}>
+              Pode levar alguns minutos para muitas pessoas. Não feche esta página.</p>
+          </div>
+        )}
+
+        {/* envio ao OneDrive: resultado */}
+        {envio && envio.ok !== undefined && (
           <div style={{ marginTop: 14, padding: '11px 14px', fontSize: 13, fontWeight: 500,
             border: `1px solid ${envio.ok ? COLORS.emerald : COLORS.red}`,
             background: envio.ok ? COLORS.emeraldSoft : COLORS.redSoft,

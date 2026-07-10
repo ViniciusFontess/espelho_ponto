@@ -15,6 +15,8 @@ export default function UploadMolde({ onBack, onDone }) {
   const [enviando, setEnviando] = useState(false)
   const [drag, setDrag] = useState(false)
   const [verExemplo, setVerExemplo] = useState(false)
+  const [od, setOd] = useState({ configurado: false, pastas: [] })
+  const [pastaDestino, setPastaDestino] = useState('')
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -23,6 +25,10 @@ export default function UploadMolde({ onBack, onDone }) {
       const primeiro = ms.find(m => m.status === 'ativo') || ms[0]
       if (primeiro) { setMoldeId(primeiro.id); setSelecionadas(primeiro.variaveis) }
     })
+    fetch('/onedrive/config').then(r => r.json()).then(c => {
+      setOd(c)
+      if (c.pastas?.length) setPastaDestino(c.pastas[0])
+    }).catch(() => {})
   }, [])
 
   const molde = moldes.find(m => m.id === moldeId)
@@ -46,6 +52,7 @@ export default function UploadMolde({ onBack, onDone }) {
     form.append('file', file)
     form.append('molde_id', moldeId)
     form.append('variaveis', JSON.stringify(selecionadas))
+    if (od.configurado && pastaDestino) form.append('pasta', pastaDestino)
     try {
       const res = await fetch('/upload', { method: 'POST', body: form })
       if (!res.ok) throw new Error((await res.json()).error)
@@ -138,6 +145,20 @@ export default function UploadMolde({ onBack, onDone }) {
           {/* passo 03 — destino */}
           <div style={{ padding: 24 }}>
             <PassoHead n="03" titulo="Para onde vai cada pessoa" dica="Como a plataforma direciona cada colaborador para sua pasta funcional." />
+
+            {od.configurado && (
+              <div style={{ marginBottom: 16, padding: 14, border: `1.5px solid ${COLORS.blue}`, background: COLORS.blueSoft }}>
+                <div style={{ ...monoLabel, fontSize: 9.5, color: COLORS.blue, marginBottom: 8 }}>PASTA DE DESTINO NO ONEDRIVE</div>
+                <select value={pastaDestino} onChange={e => setPastaDestino(e.target.value)}
+                  style={{ ...selectStyle, borderColor: COLORS.blue }}>
+                  {od.pastas.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <p style={{ fontSize: 11.5, color: COLORS.inkSoft, marginTop: 8 }}>
+                  No relatório, o botão <strong>Confirmar envio para o OneDrive</strong> vai gravar nesta pasta.
+                </p>
+              </div>
+            )}
+
             <select disabled style={{ ...selectStyle, opacity: .7 }}>
               <option>Organização: por pessoa e competência</option>
             </select>

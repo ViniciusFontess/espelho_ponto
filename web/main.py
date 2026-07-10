@@ -50,6 +50,15 @@ def onedrive_config():
             "pastas": destino_onedrive.pastas_permitidas() if cfg else []}
 
 
+@app.get("/onedrive/historico")
+async def onedrive_historico():
+    """Log dos últimos envios (lido dos historico_envios.csv no OneDrive)."""
+    try:
+        return await asyncio.to_thread(destino_onedrive.ler_historico)
+    except Exception:
+        return []
+
+
 @app.post("/upload")
 async def upload_pdf(
     file: UploadFile = File(...),

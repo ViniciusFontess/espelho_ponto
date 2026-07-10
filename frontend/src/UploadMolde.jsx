@@ -17,6 +17,7 @@ export default function UploadMolde({ onBack, onDone }) {
   const [verExemplo, setVerExemplo] = useState(false)
   const [od, setOd] = useState({ configurado: false, pastas: [] })
   const [pastaDestino, setPastaDestino] = useState('')
+  const [historico, setHistorico] = useState([])
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function UploadMolde({ onBack, onDone }) {
       setOd(c)
       if (c.pastas?.length) setPastaDestino(c.pastas[0])
     }).catch(() => {})
+    fetch('/onedrive/historico').then(r => r.json()).then(setHistorico).catch(() => {})
   }, [])
 
   const molde = moldes.find(m => m.id === moldeId)
@@ -219,6 +221,29 @@ export default function UploadMolde({ onBack, onDone }) {
                 borderRadius: '50%', animation: 'spin .8s linear infinite' }} /> Processando…</>
             : <>Processar e separar documentos <ArrowRight color="#fff" /></>}
         </motion.button>
+
+        {/* log dos últimos envios ao OneDrive */}
+        {od.configurado && historico.length > 0 && (
+          <section style={{ marginTop: 34 }}>
+            <div style={{ ...monoLabel, fontSize: 11, color: COLORS.muted, marginBottom: 12 }}>ÚLTIMOS ENVIOS AO ONEDRIVE</div>
+            <div style={{ border: `1px solid ${COLORS.line}`, background: '#fff' }}>
+              {historico.map((h, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '11px 14px',
+                  borderTop: i ? `1px solid ${COLORS.line}` : 'none', fontSize: 12.5 }}>
+                  <span style={{ fontFamily: FONT.mono, fontSize: 11.5, color: COLORS.muted, whiteSpace: 'nowrap' }}>{h.data_hora}</span>
+                  <span style={{ ...monoLabel, fontSize: 9, color: COLORS.blue, background: COLORS.blueSoft, padding: '3px 8px', whiteSpace: 'nowrap' }}>{h.pasta}</span>
+                  <span style={{ color: COLORS.inkSoft, whiteSpace: 'nowrap' }}>
+                    {h.tipo === 'espelho' ? 'Eletrônico' : h.tipo === 'jornada' ? 'Jornada' : h.tipo}
+                  </span>
+                  <span style={{ color: COLORS.muted, marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                    <strong style={{ color: COLORS.ink, fontFamily: FONT.mono }}>{h.enviados}</strong> arquivos · {h.pessoas} pessoas
+                    {Number(h.ja_existentes) > 0 && <span> · {h.ja_existentes} já existiam</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <div style={{ flex: 1 }} />

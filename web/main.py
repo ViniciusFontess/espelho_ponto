@@ -28,7 +28,9 @@ _jobs: dict[str, dict] = {}
 
 @app.get("/")
 def index():
-    return FileResponse("web/static/index.html")
+    # no-cache no index p/ o navegador sempre pegar os assets novos após deploy.
+    return FileResponse("web/static/index.html",
+                        headers={"Cache-Control": "no-cache, must-revalidate"})
 
 
 @app.get("/moldes")

@@ -161,6 +161,25 @@ def enviar(saida_dir, tipo: str, pasta: str = None, molde: str = None,
     return resumo
 
 
+def ler_historico(limite: int = 30) -> list:
+    """Lê os historico_envios.csv de cada pasta permitida e devolve os envios,
+    mais recentes primeiro. Best-effort: erro/rede vira lista (parcial)."""
+    if not configurado():
+        return []
+    token = _token()
+    user = os.environ["ONEDRIVE_USER"]
+    base = os.environ.get("ONEDRIVE_BASE", _BASE_PADRAO)
+    linhas = []
+    for pasta in pastas_permitidas():
+        dados = _download(f"{base}/{pasta}/{_HIST}", token, user)
+        if not dados:
+            continue
+        for row in csv.DictReader(io.StringIO(dados.decode("utf-8-sig"))):
+            linhas.append(row)
+    linhas.sort(key=lambda r: r.get("data_hora", ""), reverse=True)
+    return linhas[:limite]
+
+
 if __name__ == "__main__":  # autoteste do caminho (sem rede)
     os.environ["ONEDRIVE_BASE"] = "Base"
     os.environ["ONEDRIVE_PASTA"] = "teste"

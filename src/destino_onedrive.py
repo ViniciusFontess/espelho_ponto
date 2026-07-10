@@ -26,7 +26,7 @@ import httpx
 _GRAPH = "https://graph.microsoft.com/v1.0"
 _TIPO_PASTA = {"espelho": "Eletrônico", "jornada": "Jornada"}
 _BASE_PADRAO = "Arquivos/ADM Pessoal/DOSSIÊ - DOCFLOW/Automação PDF"
-_PASTAS_PADRAO = "Teste Andreia,teste vinicius"
+_PASTAS_PADRAO = "Teste Andrea,teste vinicius"
 _HIST = "historico_envios.csv"
 _HIST_COLS = ["data_hora", "pasta", "tipo", "molde", "pessoas",
               "competencias", "enviados", "ja_existentes"]
@@ -153,7 +153,8 @@ def enviar(saida_dir, tipo: str, pasta: str = None, molde: str = None,
 
     resumo = {"enviados": enviados, "pessoas": pessoas, "competencias": competencias,
               "ja_existentes": ja_existentes, "pasta": pasta}
-    _registrar_historico(base, {
+    # histórico dentro da própria pasta de teste: {BASE}/{PASTA}/historico_envios.csv
+    _registrar_historico(f"{base}/{pasta}", {
         "data_hora": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "molde": molde or "", "tipo": tipo, **resumo,
     }, token, user)

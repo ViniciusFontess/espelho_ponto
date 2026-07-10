@@ -165,9 +165,18 @@ export default function UploadMolde({ onBack, onDone }) {
               <option>Organização: por pessoa e competência</option>
             </select>
 
-            {/* caminho anotado, nível a nível */}
+            {/* caminho anotado, nível a nível (OneDrive quando configurado; senão .zip) */}
             <div style={{ border: `1px solid ${COLORS.line}`, marginTop: 14 }}>
-              {[
+              {(od.configurado ? [
+                { ind: 0, path: `${pastaDestino || 'Teste Andrea'}/`, cor: COLORS.blue, tipo: 'ONEDRIVE',
+                  desc: 'A pasta de teste escolhida acima, no OneDrive do SEBRAE (UGP).' },
+                { ind: 1, path: 'Eletrônico | Jornada/', cor: COLORS.ink, tipo: 'TIPO',
+                  desc: 'Separado pelo tipo de documento (molde).' },
+                { ind: 2, path: 'NOME_DA_PESSOA / MM_AAAA/', cor: COLORS.ink, tipo: 'PESSOA · COMPETÊNCIA',
+                  desc: 'Uma pasta por colaborador (nome normalizado), com subpasta por competência.' },
+                { ind: 3, path: 'dados.pdf + pagina.pdf', cor: COLORS.inkSoft, tipo: 'ARQUIVOS',
+                  desc: 'Ficha legível + a página original do espelho.' },
+              ] : [
                 { ind: 0, path: '/Pasta Funcional/', cor: COLORS.blue, tipo: 'RAIZ',
                   desc: 'Diretório base no servidor do SEBRAE.' },
                 { ind: 1, path: 'NOME_DA_PESSOA/', cor: COLORS.ink, tipo: 'PASTA',
@@ -178,7 +187,7 @@ export default function UploadMolde({ onBack, onDone }) {
                   desc: 'Ficha legível da pessoa (nome, competência, campos e status de assinatura).' },
                 { ind: 3, path: 'pagina.pdf', cor: COLORS.inkSoft, tipo: 'ARQUIVO',
                   desc: 'A página original do espelho daquela pessoa, recortada do PDF.' },
-              ].map((r, i) => (
+              ]).map((r, i) => (
                 <div key={i} style={{ display: 'flex', gap: 12, padding: '10px 14px',
                   borderTop: i ? `1px solid ${COLORS.line}` : 'none', background: r.ind === 0 ? COLORS.blueSoft : '#fff' }}>
                   <div style={{ flexShrink: 0, paddingLeft: r.ind * 14, minWidth: 150 }}>
@@ -195,13 +204,18 @@ export default function UploadMolde({ onBack, onDone }) {
             <div style={{ marginTop: 12, background: COLORS.bg, border: `1px solid ${COLORS.line}`, padding: '10px 12px' }}>
               <div style={{ ...monoLabel, fontSize: 8.5, color: COLORS.blue, marginBottom: 4 }}>EXEMPLO REAL</div>
               <div style={{ fontFamily: FONT.mono, fontSize: 11, color: COLORS.inkSoft }}>
-                /Pasta Funcional/<span style={{ color: COLORS.ink, fontWeight: 700 }}>ADILER_ALEX_MATIAS/</span><span style={{ color: COLORS.blue }}>01_2026/</span>
+                {od.configurado ? (
+                  <><span style={{ color: COLORS.muted }}>Automação PDF/</span><span style={{ color: COLORS.blue, fontWeight: 700 }}>{pastaDestino || 'teste vinicius'}/</span>Jornada/<span style={{ color: COLORS.ink, fontWeight: 700 }}>ADILER_ALEX_MATIAS/</span>01_2026/</>
+                ) : (
+                  <>/Pasta Funcional/<span style={{ color: COLORS.ink, fontWeight: 700 }}>ADILER_ALEX_MATIAS/</span><span style={{ color: COLORS.blue }}>01_2026/</span></>
+                )}
               </div>
             </div>
 
             <p style={{ fontSize: 11, color: COLORS.muted, marginTop: 10 }}>
-              No final, tudo é entregue em um <strong style={{ color: COLORS.ink }}>.zip</strong> com essa mesma estrutura, pronto para
-              copiar para o servidor.
+              {od.configurado
+                ? <>Ao clicar em <strong style={{ color: COLORS.ink }}>Confirmar envio para o OneDrive</strong> no relatório, tudo é gravado nessa pasta.</>
+                : <>No final, tudo é entregue em um <strong style={{ color: COLORS.ink }}>.zip</strong> com essa mesma estrutura, pronto para copiar para o servidor.</>}
             </p>
           </div>
         </div>
